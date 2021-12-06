@@ -66,15 +66,20 @@ __myapp-help() {
 myapp() {
     myapp() {
         local fname="__${FUNCNAME[0]}"
-        local _name=$fname
+        local _matchargs=$*
+        local _matchfname=$fname
         while (($#)); do
-            _name="$_name $1"
-            _name=${_name//" "/"-"}
-            [[ $(type -t ${_name}) == function ]] && fname=$_name || break
-            # echo $fname
+            fname="$fname $1"
+            fname=${fname//" "/"-"}
             shift
+            if [[ $(type -t ${fname}) == function ]]; then 
+                _matchfname=$fname
+                _matchargs=$*
+            fi
         done
-        $fname $*
+        # echo matched fname $_matchfname
+        # echo matched args $_matchargs
+        $_matchfname $_matchargs
     }
     __myappComplete() {
         local CUR
