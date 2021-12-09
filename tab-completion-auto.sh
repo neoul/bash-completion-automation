@@ -100,7 +100,7 @@ myapp() {
         COMPREPLY=($(compgen -W "$WORDS" -- $CUR))
         return 0
     }
-    __myappFile="${BASH_SOURCE[0]}"
+    __myappFile="${PWD}/${BASH_SOURCE[0]#${PWD}/}"
     complete -F __myappComplete myapp
 }
 
