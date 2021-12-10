@@ -14,8 +14,6 @@
 #  And then update the sub-functions and their function body.
 # 
 
-
-
 __myapp() { ## help description A
     echo A $*
 }
@@ -32,7 +30,7 @@ __myapp-secondD() {
     echo A-D $*
 }
 
-__myapp-secondB-thirdX() {
+__myapp-secondB-thirdX() { ## help description A-B-X
     echo A-B-X $*
 }
 
@@ -55,7 +53,6 @@ __myapp-secondC-thirdZ() {
 __myapp-help() {
     # cat $__myappFile | grep "^__[A-Za-z0-9\-_]\(\)" | sort | sed 's/__//g; s/() {/|/g' | awk 'BEGIN {FS = "|"}; {printf "\033[36m%-30s\033[0m %s\n", $1, $2}'
     local FUNCS=$(cat $__myappFile | grep "^__[A-Za-z0-9\-_]\(\)" | sort | sed 's/() {.*//g; s/__//g')
-    local FUNCSDESC=$(cat $__myappFile | grep "^__[A-Za-z0-9\-_]\(\)" | sort | sed 's/() {//g; s/__//g')
     for entry in $FUNCS; do
         IFS='-' read -r -a array <<< "$entry"
         echo ${array[@]} $(cat $__myappFile | grep "^__"${entry}"()" | sed 's/.*{//') | \
@@ -64,44 +61,37 @@ __myapp-help() {
 }
 
 myapp() {
-    myapp() {
-        local fname="__${FUNCNAME[0]}"
-        local _matchargs=$*
-        local _matchfname=$fname
-        while (($#)); do
-            fname="$fname $1"
-            fname=${fname//" "/"-"}
-            shift
-            if [[ $(type -t ${fname}) == function ]]; then 
-                _matchfname=$fname
-                _matchargs=$*
-            fi
-        done
-        # echo matched fname $_matchfname
-        # echo matched args $_matchargs
-        $_matchfname $_matchargs
-    }
-    __myappComplete() {
-        local CUR
-        local FULLNAME
-        local FUNCNAMES
-        # echo COMP_WORDS=${COMP_WORDS[@]} # pull string
-        # echo COMP_LINE=$COMP_LINE
-        # echo COMP_CWORD=$COMP_CWORD
-        # echo CUR=${COMP_WORDS[COMP_CWORD]}
-        FULLNAME=${COMP_LINE//" "/"-"}
-        FUNCNAMES=$(cat $__myappFile | grep "^__$FULLNAME" | sort | sed 's/() {.*//g' | sed 's/__//g')
-        COMPREPLY=()
-        WORDS=""
-        for fname in $FUNCNAMES; do
-            IFS='-' read -r -a farray <<< "$fname"
-            WORDS="$WORDS ${farray[$COMP_CWORD]}"
-        done
-        COMPREPLY=($(compgen -W "$WORDS" -- $CUR))
-        return 0
-    }
-    __myappFile="${PWD}/${BASH_SOURCE[0]#${PWD}/}"
-    complete -F __myappComplete myapp
+    local fname="__${FUNCNAME[0]}"
+    local _matchargs=$*
+    local _matchfname=$fname
+    while (($#)); do
+        fname="$fname $1"
+        fname=${fname//" "/"-"}
+        shift
+        if [[ $(type -t ${fname}) == function ]]; then 
+            _matchfname=$fname
+            _matchargs=$*
+        fi
+    done
+    # echo matched fname $_matchfname
+    # echo matched args $_matchargs
+    $_matchfname $_matchargs
 }
 
-myapp
+__myappComplete() {
+    local CUR
+    local FULLNAME
+    local FUNCNAMES
+    FULLNAME=${COMP_LINE//" "/"-"}
+    FUNCNAMES=$(cat $__myappFile | grep "^__$FULLNAME" | sort | sed 's/() {.*//g' | sed 's/__//g')
+    COMPREPLY=()
+    WORDS=""
+    for fname in $FUNCNAMES; do
+        IFS='-' read -r -a farray <<< "$fname"
+        WORDS="$WORDS ${farray[$COMP_CWORD]}"
+    done
+    COMPREPLY=($(compgen -W "$WORDS" -- $CUR))
+    return 0
+}
+__myappFile="${PWD}/${BASH_SOURCE[0]#${PWD}/}"
+complete -F __myappComplete myapp
