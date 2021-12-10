@@ -2,8 +2,8 @@
 # [Bash Tab-Completion Automation]
 #  This script provides an example how to build a tab completion
 #  from a set of user-defined functions automatically.
-#  Each function must a hierarchy to reach to the root function or
-#  reach to the target sub-function.
+#  Each function must be defined with a naming pattern to reach 
+#  to the root function or reach to the target sub-function.
 #  The root function is a function that the tab completion begins
 #  In this sample script, 'myapp' is the root function for all others.
 #  All the sub-functions must start with "__" prefix string 
