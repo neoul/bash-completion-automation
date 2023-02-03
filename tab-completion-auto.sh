@@ -15,47 +15,47 @@
 # 
 
 __myapp() { ## help description A
-    echo A $*
+    echo A "$*"
 }
 
 __myapp-secondB() { ## help description A-B
-    echo A-B $*
+    echo A-B "$*"
 }
 
 __myapp-secondC() { ## help description A-C
-    echo A-C $*
+    echo A-C "$*"
 }
 
 __myapp-secondD() {
-    echo A-D $*
+    echo A-D "$*"
 }
 
 __myapp-secondB-thirdX() { ## help description A-B-X
-    echo A-B-X $*
+    echo A-B-X "$*"
 }
 
 __myapp-secondB-thirdY() {
-    echo A-B-Y $*
+    echo A-B-Y "$*"
 }
 
 __myapp-secondC-thirdX() {
-    echo A-C-X $*
+    echo A-C-X "$*"
 }
 
 __myapp-secondC-thirdY() {
-    echo A-C-Y $*
+    echo A-C-Y "$*"
 }
 
 __myapp-secondC-thirdZ() {
-    echo A-C-Z $*
+    echo A-C-Z "$*"
 }
 
 __myapp-help() {
-    # cat $__myappFile | grep "^__[A-Za-z0-9\-_]\(\)" | sort | sed 's/__//g; s/() {/|/g' | awk 'BEGIN {FS = "|"}; {printf "\033[36m%-30s\033[0m %s\n", $1, $2}'
-    local FUNCS=$(cat $__myappFile | grep "^__[A-Za-z0-9\-_]\(\)" | sort | sed 's/() {.*//g; s/__//g')
+    local FUNCS
+    FUNCS=$(grep "^__[A-Za-z0-9\-_]\(\)" "$_myappFile" | sort | sed 's/() {.*//g; s/__//g')
     for entry in $FUNCS; do
         IFS='-' read -r -a array <<< "$entry"
-        echo ${array[@]} $(cat $__myappFile | grep "^__"${entry}"()" | sed 's/.*{//') | \
+        echo "${array[@]}" "$(grep "^__${entry}()" "$_myappFile" | sed 's/.*{//')" | \
         awk 'BEGIN {FS = "##"}; {printf "\033[36m%-30s\033[0m %s\n", $1, $2}'
     done
 }
@@ -68,30 +68,33 @@ myapp() {
         fname="$fname $1"
         fname=${fname//" "/"-"}
         shift
-        if [[ $(type -t ${fname}) == function ]]; then 
+        if [[ $(type -t "${fname}") == function ]]; then 
             _matchfname=$fname
             _matchargs=$*
         fi
     done
-    # echo matched fname $_matchfname
-    # echo matched args $_matchargs
-    $_matchfname $_matchargs
+    # echo matched fname "$_matchfname"
+    # echo matched args "$_matchargs"
+    $_matchfname "$_matchargs"
 }
 
-__myappComplete() {
+_myappComplete() {
     local CUR
     local FULLNAME
     local FUNCNAMES
     FULLNAME=${COMP_LINE//" "/"-"}
-    FUNCNAMES=$(cat $__myappFile | grep "^__$FULLNAME" | sort | sed 's/() {.*//g' | sed 's/__//g')
+    FUNCNAMES=$(grep "^__$FULLNAME" "$_myappFile" | sort | sed 's/() {.*//g' | sed 's/__//g')
     COMPREPLY=()
     WORDS=""
     for fname in $FUNCNAMES; do
         IFS='-' read -r -a farray <<< "$fname"
         WORDS="$WORDS ${farray[$COMP_CWORD]}"
     done
-    COMPREPLY=($(compgen -W "$WORDS" -- $CUR))
+    local _COMPGEN
+    _COMPGEN=$(compgen -W "$WORDS" -- "$CUR")
+    COMPREPLY=($_COMPGEN)
     return 0
 }
-__myappFile="${PWD}/${BASH_SOURCE[0]#${PWD}/}"
-complete -F __myappComplete myapp
+
+_myappFile="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+complete -F _myappComplete myapp
